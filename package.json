@@ -1,0 +1,9 @@
+{
+  "name": "mesas-diego-angie",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Planificador de mesas para el matrimonio de Diego y Angie",
+  "dependencies": {
+    "@vercel/kv": "^2.0.0"
+  }
+}

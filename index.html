@@ -1,0 +1,1019 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mesas — Diego & Angie</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+  :root{
+    --ivory:#FAF6EF;
+    --ivory-2:#F1EBDD;
+    --sage:#5B6E52;
+    --sage-dk:#3E4D38;
+    --gold:#A9824C;
+    --gold-lt:#D9C79E;
+    --ink:#2B2A25;
+    --ink-soft:#635F53;
+    --line:#DDD3BE;
+    --danger:#A5453A;
+    --danger-bg:#F6E6E2;
+    --ok-bg:#E9EEE3;
+    --card-bg:#FFFFFF;
+    --radius-s:3px;
+    --radius-m:6px;
+    --font-display: 'Fraunces', Georgia, 'Times New Roman', serif;
+    --font-body: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  }
+  :root:not([data-theme="light"]){
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --ivory:#211F1A;
+      --ivory-2:#2A2822;
+      --sage:#8DA37E;
+      --sage-dk:#A9BC9C;
+      --gold:#D2B27C;
+      --gold-lt:#4B4534;
+      --ink:#EFEAE0;
+      --ink-soft:#B7B0A0;
+      --line:#453F32;
+      --danger:#E08B7D;
+      --danger-bg:#3B2823;
+      --ok-bg:#2C3627;
+      --card-bg:#28261F;
+    }
+  }
+  :root[data-theme="dark"]{
+    --ivory:#211F1A;
+    --ivory-2:#2A2822;
+    --sage:#8DA37E;
+    --sage-dk:#A9BC9C;
+    --gold:#D2B27C;
+    --gold-lt:#4B4534;
+    --ink:#EFEAE0;
+    --ink-soft:#B7B0A0;
+    --line:#453F32;
+    --danger:#E08B7D;
+    --danger-bg:#3B2823;
+    --ok-bg:#2C3627;
+    --card-bg:#28261F;
+  }
+
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--ivory);
+    color:var(--ink);
+    font-family:var(--font-body);
+    min-height:100vh;
+  }
+
+  @font-face{
+    font-family:'Fraunces';
+    src:local('Fraunces');
+  }
+
+  .wrap{
+    max-width:1400px;
+    margin:0 auto;
+    padding:28px 20px 80px;
+  }
+
+  header.top{
+    display:flex;
+    flex-wrap:wrap;
+    align-items:baseline;
+    justify-content:space-between;
+    gap:16px;
+    border-bottom:1px solid var(--line);
+    padding-bottom:18px;
+    margin-bottom:22px;
+  }
+  header.top h1{
+    font-family:var(--font-display);
+    font-weight:600;
+    font-style:italic;
+    font-size:clamp(28px,4vw,40px);
+    margin:0;
+    color:var(--sage-dk);
+    letter-spacing:0.2px;
+  }
+  header.top .sub{
+    font-size:13px;
+    color:var(--ink-soft);
+    margin-top:4px;
+    font-style:normal;
+  }
+  .toolbar{
+    display:flex;
+    gap:10px;
+    flex-wrap:wrap;
+    align-items:center;
+  }
+  button{
+    font-family:var(--font-body);
+    font-size:13.5px;
+    border-radius:var(--radius-s);
+    border:1px solid var(--line);
+    background:var(--card-bg);
+    color:var(--ink);
+    padding:8px 14px;
+    cursor:pointer;
+    transition:background .15s, border-color .15s;
+  }
+  button:hover{border-color:var(--sage);}
+  button.primary{
+    background:var(--sage);
+    border-color:var(--sage);
+    color:var(--ivory);
+  }
+  button.primary:hover{background:var(--sage-dk);border-color:var(--sage-dk);}
+  button.ghost{
+    background:transparent;
+  }
+  button:disabled{opacity:.4;cursor:not-allowed;}
+
+  .stats{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(120px,1fr));
+    gap:1px;
+    background:var(--line);
+    border:1px solid var(--line);
+    border-radius:var(--radius-m);
+    overflow:hidden;
+    margin-bottom:24px;
+  }
+  .stat{
+    background:var(--card-bg);
+    padding:14px 16px;
+  }
+  .stat .n{
+    font-family:var(--font-display);
+    font-size:26px;
+    font-weight:600;
+    color:var(--sage-dk);
+    line-height:1;
+  }
+  .stat .l{
+    font-size:11.5px;
+    color:var(--ink-soft);
+    margin-top:6px;
+  }
+  .stat.warn .n{color:var(--danger);}
+
+  .layout{
+    display:grid;
+    grid-template-columns:290px 1fr;
+    gap:22px;
+    align-items:start;
+  }
+  @media (max-width: 860px){
+    .layout{grid-template-columns:1fr;}
+  }
+
+  .pool{
+    background:var(--card-bg);
+    border:1px solid var(--line);
+    border-radius:var(--radius-m);
+    padding:14px;
+    position:sticky;
+    top:16px;
+    max-height:calc(100vh - 32px);
+    display:flex;
+    flex-direction:column;
+  }
+  @media (max-width: 860px){
+    .pool{position:static;max-height:none;}
+  }
+  .pool h2{
+    font-family:var(--font-display);
+    font-size:16px;
+    font-weight:600;
+    margin:0 0 10px;
+    display:flex;
+    justify-content:space-between;
+    align-items:baseline;
+  }
+  .pool h2 span{
+    font-family:var(--font-body);
+    font-size:12px;
+    color:var(--ink-soft);
+    font-weight:400;
+  }
+  .pool input[type="text"]{
+    width:100%;
+    padding:8px 10px;
+    border:1px solid var(--line);
+    border-radius:var(--radius-s);
+    background:var(--ivory);
+    color:var(--ink);
+    font-size:13px;
+    margin-bottom:10px;
+    font-family:var(--font-body);
+  }
+  .pool input[type="text"]:focus{outline:2px solid var(--sage);outline-offset:-1px;}
+  #poolList{
+    overflow-y:auto;
+    flex:1;
+    min-height:120px;
+    padding-right:2px;
+  }
+  #poolList.dragover, .mesa-dropzone.dragover{
+    background:var(--ok-bg);
+    outline:2px dashed var(--sage);
+    outline-offset:-2px;
+    border-radius:var(--radius-s);
+  }
+
+  .guest{
+    background:var(--ivory-2);
+    border:1px solid var(--line);
+    border-radius:var(--radius-s);
+    padding:7px 9px;
+    margin-bottom:6px;
+    cursor:grab;
+    font-size:13px;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:6px;
+    user-select:none;
+    touch-action:manipulation;
+  }
+  .guest:active{cursor:grabbing;}
+  .guest.selected{
+    border-color:var(--gold);
+    background:var(--gold-lt);
+    box-shadow:0 0 0 1px var(--gold);
+  }
+  .guest .name{
+    overflow:hidden;
+    text-overflow:ellipsis;
+    white-space:nowrap;
+  }
+  .guest .name b{font-weight:600;}
+  .guest .badge{
+    font-size:10.5px;
+    color:var(--ink-soft);
+    flex:none;
+  }
+  .guest .badge.two{
+    color:var(--sage-dk);
+    font-weight:600;
+  }
+  .del-guest{
+    border:none;
+    background:none;
+    color:var(--ink-soft);
+    font-size:12px;
+    line-height:1;
+    padding:2px 3px;
+    cursor:pointer;
+    flex:none;
+    opacity:.55;
+  }
+  .del-guest:hover{color:var(--danger);opacity:1;}
+  .pool-empty{
+    font-size:12.5px;
+    color:var(--ink-soft);
+    padding:14px 4px;
+    text-align:center;
+    font-style:italic;
+  }
+
+  .mesas-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fill,minmax(240px,1fr));
+    gap:16px;
+  }
+  .mesa{
+    background:var(--card-bg);
+    border:1px solid var(--line);
+    border-radius:var(--radius-m);
+    padding:12px;
+    display:flex;
+    flex-direction:column;
+  }
+  .mesa.over{border-color:var(--danger);}
+  .mesa-head{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:8px;
+    margin-bottom:8px;
+  }
+  .mesa-head input.mesa-name{
+    font-family:var(--font-display);
+    font-weight:600;
+    font-size:15.5px;
+    border:none;
+    background:transparent;
+    color:var(--ink);
+    padding:2px 0;
+    width:100%;
+    border-bottom:1px solid transparent;
+  }
+  .mesa-head input.mesa-name:focus{outline:none;border-bottom:1px solid var(--sage);}
+  .mesa-cap{
+    display:flex;
+    align-items:center;
+    gap:4px;
+    flex:none;
+  }
+  .mesa-cap select{
+    font-family:var(--font-body);
+    font-size:12px;
+    border:1px solid var(--line);
+    border-radius:var(--radius-s);
+    background:var(--ivory);
+    color:var(--ink);
+    padding:2px 4px;
+  }
+  .mesa-count{
+    font-size:12px;
+    margin-bottom:8px;
+    padding:4px 8px;
+    border-radius:var(--radius-s);
+    background:var(--ok-bg);
+    color:var(--sage-dk);
+    display:inline-flex;
+    gap:5px;
+    align-items:center;
+    width:fit-content;
+    font-weight:600;
+  }
+  .mesa-count.over{
+    background:var(--danger-bg);
+    color:var(--danger);
+  }
+  .mesa-dropzone{
+    min-height:70px;
+    flex:1;
+    border-radius:var(--radius-s);
+    padding:2px;
+  }
+  .mesa-guest{
+    background:var(--ivory-2);
+    border:1px solid var(--line);
+    border-radius:var(--radius-s);
+    padding:6px 8px;
+    margin-bottom:5px;
+    font-size:12.5px;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:6px;
+    cursor:grab;
+  }
+  .mesa-guest .name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .mesa-guest button.remove{
+    border:none;
+    background:none;
+    color:var(--ink-soft);
+    font-size:15px;
+    line-height:1;
+    padding:0 2px;
+    cursor:pointer;
+  }
+  .mesa-guest button.remove:hover{color:var(--danger);}
+  .mesa-empty{
+    font-size:11.5px;
+    color:var(--ink-soft);
+    text-align:center;
+    padding:14px 4px;
+    font-style:italic;
+    border:1px dashed var(--line);
+    border-radius:var(--radius-s);
+  }
+  .mesa-del{
+    background:none;
+    border:none;
+    color:var(--ink-soft);
+    font-size:16px;
+    cursor:pointer;
+    line-height:1;
+    padding:2px 4px;
+    flex:none;
+  }
+  .mesa-del:hover{color:var(--danger);}
+
+  .add-mesa-card{
+    border:1px dashed var(--line);
+    border-radius:var(--radius-m);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    min-height:140px;
+    cursor:pointer;
+    color:var(--ink-soft);
+    font-size:13.5px;
+    background:transparent;
+  }
+  .add-mesa-card:hover{border-color:var(--sage);color:var(--sage-dk);}
+
+  footer.hint{
+    margin-top:24px;
+    font-size:12px;
+    color:var(--ink-soft);
+    text-align:center;
+  }
+
+  ::-webkit-scrollbar{width:8px;height:8px;}
+  ::-webkit-scrollbar-thumb{background:var(--line);border-radius:4px;}
+
+  a.dl{color:var(--sage-dk);}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div>
+      <h1>Diego &amp; Angie</h1>
+      <div class="sub">Distribución de mesas — arrastra cada invitado hasta su mesa</div>
+      <div class="sub" id="syncStatus" style="margin-top:2px;">Conectando almacenamiento...</div>
+    </div>
+    <div class="toolbar">
+      <button class="ghost" id="btnExportXlsx">Exportar Excel</button>
+      <button class="ghost" id="btnExport">Exportar CSV</button>
+      <button class="ghost" id="btnReset">Vaciar todo</button>
+      <button class="primary" id="btnAddMesa">+ Nueva mesa</button>
+    </div>
+  </header>
+
+  <div class="stats" id="stats"></div>
+
+  <div class="layout">
+    <div class="pool">
+      <h2>Sin asignar <span id="poolCount"></span></h2>
+      <div id="removedLine" style="display:none;font-size:11.5px;color:var(--ink-soft);margin-bottom:8px;">
+        <span></span> <a href="#" id="restoreRemoved" style="color:var(--sage-dk);">deshacer</a>
+      </div>
+      <button class="ghost" id="btnToggleAdd" style="width:100%;margin-bottom:8px;">+ Agregar invitado</button>
+      <div id="addGuestForm" style="display:none;margin-bottom:10px;padding:10px;border:1px solid var(--line);border-radius:var(--radius-s);background:var(--ivory);">
+        <input type="text" id="newApellido" placeholder="Apellido" style="width:100%;margin-bottom:6px;padding:7px 9px;border:1px solid var(--line);border-radius:var(--radius-s);background:var(--card-bg);color:var(--ink);font-size:13px;">
+        <input type="text" id="newNombre" placeholder="Nombre" style="width:100%;margin-bottom:6px;padding:7px 9px;border:1px solid var(--line);border-radius:var(--radius-s);background:var(--card-bg);color:var(--ink);font-size:13px;">
+        <select id="newPlus" style="width:100%;margin-bottom:8px;padding:7px 9px;border:1px solid var(--line);border-radius:var(--radius-s);background:var(--card-bg);color:var(--ink);font-size:13px;">
+          <option value="">Sin acompañante (1 persona)</option>
+          <option value="Sra.">Con Sra. (+1)</option>
+          <option value="AC">Con AC (+1)</option>
+        </select>
+        <div style="display:flex;gap:6px;">
+          <button class="primary" id="btnConfirmAdd" style="flex:1;">Agregar</button>
+          <button class="ghost" id="btnCancelAdd">Cancelar</button>
+        </div>
+      </div>
+      <input type="text" id="search" placeholder="Buscar por apellido o nombre...">
+      <div id="poolList"></div>
+    </div>
+
+    <div class="mesas-grid" id="mesasGrid"></div>
+  </div>
+
+  <footer class="hint">Los datos se guardan automáticamente en este navegador. Cada tarjeta muestra 1 o 2 personas (2 cuando el invitado lleva Sra. o AC). También puedes tocar un invitado para seleccionarlo y luego tocar la mesa donde quieras ubicarlo.</footer>
+</div>
+
+<script>
+const GUESTS = [{"id": "g1", "apellido": "Aguirre A", "nombre": "Felipe", "plus": "Sra.", "extra": true, "count": 2}, {"id": "g2", "apellido": "Álamos O", "nombre": "Luis Enrique", "plus": "Sra.", "extra": true, "count": 2}, {"id": "g3", "apellido": "Alessandri C", "nombre": "Anibal", "plus": "", "extra": false, "count": 1}, {"id": "g4", "apellido": "Allende B", "nombre": "Joaquin", "plus": "Sra.", "extra": true, "count": 2}, {"id": "g5", "apellido": "Allende D", "nombre": "Patricio", "plus": "Sra.", "extra": true, "count": 2}, {"id": "g6", "apellido": "Alvarez M", "nombre": "Luis", "plus": "Sra.", "extra": true, "count": 2}, {"id": "g7", "apellido": "Amenabar E", "nombre": "Gustavo", "plus": "Sra.", "extra": true, "count": 2}, {"id": "g8", "apellido": "Amenabar F", "nombre": "Magdalena", "plus": "AC", "extra": true, "count": 2}, {"id": "g9", "apellido": "Ariztia C", "nombre": "Vicente", "plus": "Sra.", "extra": true, "count": 2}, {"id": "g10", "apellido": "Ariztia C", "nombre": "Sebastian", "plus": "Sra.", "extra": true, "count": 2}, {"id": "g11", "apellido": "Ariztia C.", "nombre": "Carolina", "plus": "", "extra": false, "count": 1}, {"id": "g12", "apellido": "Ariztia C.", "nombre": "Gerardo", "plus": "Sra.", "extra": true, "count": 2}, {"id": "g13", "apellido": "Ariztia C.", "nombre": "Carlos", "plus": "Sra.", "extra": true, "count": 2}, {"id": "g14", "apellido": "Ariztia C.", "nombre": "Nicolas", "plus": "Sra.", "extra": true, "count": 2}, {"id": "g15", "apellido": "Ariztia L", "nombre": "Magdalena", "plus": "AC", "extra": true, "count": 2}, {"id": "g16", "apellido": "Ariztia L", "nombre": "José Manuel", "plus": "AC", "extra": true, "count": 2}, {"id": "g17", "apellido": "Ariztia L", "nombre": "Inés", "plus": "AC", "extra": true, "count": 2}, {"id": "g18", "apellido": "Ariztia L", "nombre": "Fernando", "plus": "AC", "extra": true, "count": 2}, {"id": "g19", "apellido": "Ariztia L.", "nombre": "Sebastian", "plus": "AC", "extra": true, "count": 2}, {"id": "g20", "apellido": "Ariztia L.", "nombre": "Ignacia", "plus": "AC", "extra": true, "count": 2}, {"id": "g21", "apellido": "Ariztia L.", "nombre": "Trinidad", "plus": "AC", "extra": true, "count": 2}, {"id": "g22", "apellido": "Ariztia L.", "nombre": "Nicolas", "plus": "AC", "extra": true, "count": 2}, {"id": "g23", "apellido": "Ariztia L.", "nombre": "Santiago", "plus": "AC", "extra": true, "count": 2}, {"id": "g24", "apellido": "Ariztia L.", "nombre": "Rosario", "plus": "AC", "extra": true, "count": 2}, {"id": "g25", "apellido": "Ariztia M", "nombre": "Blanca", "plus": "AC", "extra": true, "count": 2}, {"id": "g26", "apellido": "Ariztia M.", "nombre": "Carlos", "plus": "Sra.", "extra": true, "count": 2}, {"id": "g27", "apellido": "Ariztia S", "nombre": "María", "plus": "AC", "extra": true, "count": 2}, {"id": "g28", "apellido": "Ariztia Y", "nombre": "Olga", "plus": "", "extra": false, "count": 1}, {"id": "g29", "apellido": "Ariztia Y.", "nombre": "Bernardita", "plus": "", "extra": false, "count": 1}, {"id": "g30", "apellido": "Arrieta C", "nombre": "Juan Ignacio", "plus": "Sra.", "extra": true, "count": 2}, {"id": "g31", "apellido": "Astaburuaga G", "nombre": "Jorge", "plus": "Sra.", "extra": true, "count": 2}, {"id": "g32", "apellido": "Baeza D", "nombre": "Luis Alberto", "plus": "Sra.", "extra": true, "count": 2}, {"id": "g33", "apellido": "Baraona U.", "nombre": "Pablo", "plus": "Sra.", "extra": true, "count": 2}, {"id": "g34", "apellido": "Barros B", "nombre": "Gonzalo", "plus": "Sra.", "extra": true, "count": 2}, {"id": "g35", "apellido": "Barros N", "nombre": "María de la Luz", "plus": "AC", "extra": true, "count": 2}, {"id": "g36", "apellido": "Barros P", "nombre": "Alvaro", "plus": "Sra.", "extra": true, "count": 2}, {"id": "g37", "apellido": "Calvo D", "nombre": "Javier", "plus": "Sra.", "extra": true, "count": 2}, {"id": "g38", "apellido": "Canales S", "nombre": "Nicolas", "plus": "Sra.", "extra": true, "count": 2}, {"id": "g39", "apellido": "Castillo E", "nombre": "Andrés", "plus": "Sra.", "extra": true, "count": 2}, {"id": "g40", "apellido": "Cavallo C", "nombre": "Augusto", "plus": "Sra.", "extra": true, "count": 2}, {"id": "g41", "apellido": "Celedon C", "nombre": "Eugenio", "plus": "Sra.", "extra": true, "count": 2}, {"id": "g42", "apellido": "Concha V", "nombre": "José", "plus": "Sra.", "extra": true, "count": 2}, {"id": "g43", "apellido": "Correa A", "nombre": "Nicolas", "plus": "AC", "extra": true, "count": 2}, {"id": "g44", "apellido": "Correa Del Rio", "nombre": "Manuel", "plus": "Sra.", "extra": true, "count": 2}, {"id": "g45", "apellido": "Correa V", "nombre": "María Teresa", "plus": "Sra.", "extra": true, "count": 2}, {"id": "g46", "apellido": "Correa V", "nombre": "Mario", "plus": "Sra.", "extra": true, "count": 2}, {"id": "g47", "apellido": "Correa V", "nombre": "Ismael", "plus": "Sra.", "extra": true, "count": 2}, {"id": "g48", "apellido": "Correa V", "nombre": "Paula", "plus": "", "extra": false, "count": 1}, {"id": "g49", "apellido": "Correa V.", "nombre": "Inés", "plus": "", "extra": false, "count": 1}, {"id": "g50", "apellido": "Cosmelli M.", "nombre": "Atilio", "plus": "Sra.", "extra": true, "count": 2}, {"id": "g51", "apellido": "Covarrubias A.", "nombre": "Alfonso", "plus": "AC", "extra": true, "count": 2}, {"id": "g52", "apellido": "Covarrubias A.", "nombre": "Pablo", "plus": "", "extra": false, "count": 1}, {"id": "g53", "apellido": "Covarrubias A.", "nombre": "Macarena", "plus": "AC", "extra": true, "count": 2}, {"id": "g54", "apellido": "Covarrubias A.", "nombre": "Ramon", "plus": "Sra.", "extra": true, "count": 2}, {"id": "g55", "apellido": "Covarrubias A.", "nombre": "Manuel", "plus": "Sra.", "extra": true, "count": 2}, {"id": "g56", "apellido": "Covarrubias M.", "nombre": "Pablo", "plus": "Sra.", "extra": true, "count": 2}, {"id": "g57", "apellido": "Covarrubias M.", "nombre": "Ramón", "plus": "Sra.", "extra": true, "count": 2}, {"id": "g58", "apellido": "Covarrubias V.", "nombre": "Juan Pablo", "plus": "Sra.", "extra": true, "count": 2}, {"id": "g59", "apellido": "Covarrubias V.", "nombre": "Ramon", "plus": "", "extra": false, "count": 1}, {"id": "g60", "apellido": "Covarrubias V.", "nombre": "José Tomás", "plus": "Sra.", "extra": true, "count": 2}, {"id": "g61", "apellido": "Covarrubias Vives", "nombre": "Rafael", "plus": "Sra.", "extra": true, "count": 2}, {"id": "g62", "apellido": "Covarrubias A.", "nombre": "Diego", "plus": "", "extra": false, "count": 1}, {"id": "g63", "apellido": "Cruz I", "nombre": "Eugenio", "plus": "", "extra": false, "count": 1}, {"id": "g64", "apellido": "Cruz N.", "nombre": "Eugenio", "plus": "Sra.", "extra": true, "count": 2}, {"id": "g65", "apellido": "Cuevas O", "nombre": "Elena", "plus": "", "extra": false, "count": 1}, {"id": "g66", "apellido": "del Valle I", "nombre": "Luis", "plus": "Sra.", "extra": true, "count": 2}, {"id": "g67", "apellido": "Echeverria B", "nombre": "Pedro Pablo", "plus": "Sra.", "extra": true, "count": 2}, {"id": "g68", "apellido": "Echeverria E", "nombre": "Juan Diego", "plus": "Sra.", "extra": true, "count": 2}, {"id": "g69", "apellido": "Edwards V", "nombre": "Ricardo", "plus": "Sra.", "extra": true, "count": 2}, {"id": "g70", "apellido": "Errazuriz Barros", "nombre": "Francisco", "plus": "", "extra": false, "count": 1}, {"id": "g71", "apellido": "Errazuriz D.", "nombre": "Francisco", "plus": "Sra.", "extra": true, "count": 2}, {"id": "g72", "apellido": "Eyzaguirre L", "nombre": "Antonio", "plus": "Sra.", "extra": true, "count": 2}, {"id": "g73", "apellido": "Fabres I", "nombre": "Vicente", "plus": "Sra.", "extra": true, "count": 2}, {"id": "g74", "apellido": "Fernandez R.", "nombre": "Diego", "plus": "Sra.", "extra": true, "count": 2}, {"id": "g75", "apellido": "Fernandez Z", "nombre": "Borja", "plus": "Sra.", "extra": true, "count": 2}, {"id": "g76", "apellido": "Galilea H", "nombre": "Felipe", "plus": "AC", "extra": true, "count": 2}, {"id": "g77", "apellido": "Garcia T", "nombre": "Jaime", "plus": "Sra.", "extra": true, "count": 2}, {"id": "g78", "apellido": "Gatica A", "nombre": "Juan Enrique", "plus": "Sra.", "extra": true, "count": 2}, {"id": "g79", "apellido": "Gatica Baeza", "nombre": "Juan", "plus": "Sra.", "extra": true, "count": 2}, {"id": "g80", "apellido": "Gonzalez M", "nombre": "Jorge", "plus": "Sra.", "extra": true, "count": 2}, {"id": "g81", "apellido": "Guzmán H", "nombre": "Felipe", "plus": "Sra.", "extra": true, "count": 2}, {"id": "g82", "apellido": "Guzmán V", "nombre": "José", "plus": "Sra.", "extra": true, "count": 2}, {"id": "g83", "apellido": "Howard M", "nombre": "Francisco", "plus": "Sra.", "extra": true, "count": 2}, {"id": "g84", "apellido": "Howard M", "nombre": "Andrés", "plus": "Sra.", "extra": true, "count": 2}, {"id": "g85", "apellido": "Hurtado C", "nombre": "Clemente", "plus": "AC", "extra": true, "count": 2}, {"id": "g86", "apellido": "Hurtado M", "nombre": "Salvador", "plus": "Sra.", "extra": true, "count": 2}, {"id": "g87", "apellido": "Latorre D", "nombre": "Tomas", "plus": "Sra.", "extra": true, "count": 2}, {"id": "g88", "apellido": "Loewe V", "nombre": "Joaquin", "plus": "Sra.", "extra": true, "count": 2}, {"id": "g89", "apellido": "Matte L.", "nombre": "Rafael", "plus": "Sra.", "extra": true, "count": 2}, {"id": "g90", "apellido": "Matte L.", "nombre": "Francisco", "plus": "Sra.", "extra": true, "count": 2}, {"id": "g91", "apellido": "Matte L.", "nombre": "Fernando", "plus": "Sra.", "extra": true, "count": 2}, {"id": "g92", "apellido": "Matte V", "nombre": "Laura", "plus": "", "extra": false, "count": 1}, {"id": "g93", "apellido": "Moreno L", "nombre": "Meliton", "plus": "AC", "extra": true, "count": 2}, {"id": "g94", "apellido": "Ovalle C", "nombre": "Juan Ignacio", "plus": "Sra.", "extra": true, "count": 2}, {"id": "g95", "apellido": "Ovalle P", "nombre": "Enrique", "plus": "Sra.", "extra": true, "count": 2}, {"id": "g96", "apellido": "Parot B", "nombre": "Nicolas", "plus": "Sra.", "extra": true, "count": 2}, {"id": "g97", "apellido": "Parot B", "nombre": "Alberto", "plus": "Sra.", "extra": true, "count": 2}, {"id": "g98", "apellido": "Parot M", "nombre": "Juan", "plus": "AC", "extra": true, "count": 2}, {"id": "g99", "apellido": "Peirano F", "nombre": "Juan Pablo", "plus": "Sra.", "extra": true, "count": 2}, {"id": "g100", "apellido": "Pérez L", "nombre": "Manuel Antonio", "plus": "Sra.", "extra": true, "count": 2}, {"id": "g101", "apellido": "Pérez V", "nombre": "Andrés", "plus": "Sra.", "extra": true, "count": 2}, {"id": "g102", "apellido": "Piwonka A.", "nombre": "Alberto", "plus": "", "extra": false, "count": 1}, {"id": "g103", "apellido": "Piwonka A.", "nombre": "Juan Luis", "plus": "", "extra": false, "count": 1}, {"id": "g104", "apellido": "Piwonka A.", "nombre": "Rodrigo", "plus": "Sra.", "extra": true, "count": 2}, {"id": "g105", "apellido": "Portales E", "nombre": "Sergio", "plus": "Sra.", "extra": true, "count": 2}, {"id": "g106", "apellido": "Puga U", "nombre": "Manuel", "plus": "Sra.", "extra": true, "count": 2}, {"id": "g107", "apellido": "Riesco V", "nombre": "Marta", "plus": "", "extra": false, "count": 1}, {"id": "g108", "apellido": "Rodriguez A", "nombre": "Marcial", "plus": "Sra.", "extra": true, "count": 2}, {"id": "g109", "apellido": "Rodriguez B", "nombre": "Benjamin", "plus": "AC", "extra": true, "count": 2}, {"id": "g110", "apellido": "Rodriguez C", "nombre": "José Miguel", "plus": "Sra.", "extra": true, "count": 2}, {"id": "g111", "apellido": "Rodriguez V", "nombre": "Max", "plus": "Sra.", "extra": true, "count": 2}, {"id": "g112", "apellido": "Rojas C.", "nombre": "Miguel", "plus": "", "extra": false, "count": 1}, {"id": "g113", "apellido": "Rojas C.", "nombre": "Sebastián", "plus": "Sra.", "extra": true, "count": 2}, {"id": "g114", "apellido": "Rojas I.", "nombre": "Miguel", "plus": "Sra.", "extra": true, "count": 2}, {"id": "g115", "apellido": "Sepulveda P", "nombre": "Patricio", "plus": "Sra.", "extra": true, "count": 2}, {"id": "g116", "apellido": "Silva D", "nombre": "Diego", "plus": "", "extra": false, "count": 1}, {"id": "g117", "apellido": "Silva I", "nombre": "Eduardo", "plus": "Sra.", "extra": true, "count": 2}, {"id": "g118", "apellido": "Silva V", "nombre": "José Manuel", "plus": "Sra.", "extra": true, "count": 2}, {"id": "g119", "apellido": "Solorzano B", "nombre": "Patricio", "plus": "Sra.", "extra": true, "count": 2}, {"id": "g120", "apellido": "Suric G", "nombre": "Lucas", "plus": "AC", "extra": true, "count": 2}, {"id": "g121", "apellido": "Suric L", "nombre": "Francisco", "plus": "Sra.", "extra": true, "count": 2}, {"id": "g122", "apellido": "Swinburn L", "nombre": "Juan Enrique", "plus": "Sra.", "extra": true, "count": 2}, {"id": "g123", "apellido": "Troncoso C.", "nombre": "Cristóbal", "plus": "Sra.", "extra": true, "count": 2}, {"id": "g124", "apellido": "Ugarte B", "nombre": "Nicolas", "plus": "Sra.", "extra": true, "count": 2}, {"id": "g125", "apellido": "Van Wersch C", "nombre": "Andrés", "plus": "Sra.", "extra": true, "count": 2}, {"id": "g126", "apellido": "Varela B", "nombre": "Arturo", "plus": "Sra.", "extra": true, "count": 2}, {"id": "g127", "apellido": "Vergara I.", "nombre": "Antonio", "plus": "Sra.", "extra": true, "count": 2}, {"id": "g128", "apellido": "Vergara M", "nombre": "Antonio", "plus": "AC", "extra": true, "count": 2}, {"id": "g129", "apellido": "Vergara S", "nombre": "Alfonso", "plus": "Sra.", "extra": true, "count": 2}, {"id": "g130", "apellido": "Vial C", "nombre": "Nicolas", "plus": "Sra.", "extra": true, "count": 2}, {"id": "g131", "apellido": "Vial A", "nombre": "Maximiliano", "plus": "Sra.", "extra": true, "count": 2}, {"id": "g132", "apellido": "Vidal G", "nombre": "Matias", "plus": "Sra.", "extra": true, "count": 2}];
+
+const STORAGE_KEY = 'mesas_diego_angie_v2';
+
+let state = {
+  mesas: [],
+  assign: {} // guestId -> mesaId
+};
+
+function loadState(){
+  try{
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if(raw){
+      const parsed = JSON.parse(raw);
+      if(parsed && parsed.mesas) return {
+        mesas: parsed.mesas,
+        assign: parsed.assign || {},
+        extra: parsed.extra || [],
+        removed: parsed.removed || []
+      };
+    }
+  }catch(e){ console.warn('No se pudo leer localStorage', e); }
+  return {
+    mesas: [
+      {id:'m1', name:'Mesa 1', cap:10},
+      {id:'m2', name:'Mesa 2', cap:10},
+      {id:'m3', name:'Mesa 3', cap:10}
+    ],
+    assign: {},
+    extra: [],
+    removed: []
+  };
+}
+
+function saveState(){
+  try{
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  }catch(e){ console.warn('No se pudo guardar en localStorage', e); }
+  if(!receivingFromServer) persistToServer();
+}
+
+let serverReady = false;
+let writeTimer = null;
+let receivingFromServer = false;
+let pollTimer = null;
+let lastServerJSON = null;
+
+function setSyncStatus(text){
+  const el = document.getElementById('syncStatus');
+  if(el) el.textContent = text;
+}
+
+async function fetchServerState(){
+  try{
+    const res = await fetch('/api/mesas', {cache:'no-store'});
+    if(!res.ok) throw new Error('HTTP '+res.status);
+    const data = await res.json();
+    serverReady = true;
+    if(data && Array.isArray(data.mesas)){
+      const json = JSON.stringify(data);
+      if(json !== lastServerJSON){
+        lastServerJSON = json;
+        receivingFromServer = true;
+        state = {mesas: data.mesas, assign: data.assign || {}, extra: data.extra || [], removed: data.removed || []};
+        render();
+        receivingFromServer = false;
+      }
+      setSyncStatus('Guardado en el servidor — se sincroniza en cualquier dispositivo que abra este link.');
+    } else {
+      // Nada guardado todavía en el servidor: subimos el estado local como semilla.
+      setSyncStatus('Guardado en el servidor — se sincroniza en cualquier dispositivo que abra este link.');
+      persistToServer(true);
+    }
+  }catch(e){
+    console.warn('No se pudo conectar con /api/mesas', e);
+    setSyncStatus('Sin conexión al servidor; usando solo este navegador por ahora.');
+  }
+}
+
+function persistToServer(immediate){
+  if(!serverReady && !immediate) return;
+  clearTimeout(writeTimer);
+  const doWrite = () => {
+    const body = JSON.stringify({mesas: state.mesas, assign: state.assign, extra: state.extra || [], removed: state.removed || []});
+    lastServerJSON = body;
+    fetch('/api/mesas', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body
+    }).then(res=>{
+      if(!res.ok) throw new Error('HTTP '+res.status);
+      serverReady = true;
+    }).catch(err=>{
+      console.warn('No se pudo guardar en el servidor', err);
+      setSyncStatus('No se pudo guardar en el servidor; reintentando...');
+    });
+  };
+  if(immediate){ doWrite(); } else { writeTimer = setTimeout(doWrite, 350); }
+}
+
+function initCloudSync(){
+  setSyncStatus('Conectando con el servidor...');
+  fetchServerState();
+  pollTimer = setInterval(fetchServerState, 4000);
+  document.addEventListener('visibilitychange', ()=>{
+    if(document.visibilityState === 'visible') fetchServerState();
+  });
+}
+
+state = loadState();
+
+let nextMesaNum = () => {
+  let n = state.mesas.length + 1;
+  const names = new Set(state.mesas.map(m=>m.name));
+  while(names.has('Mesa '+n)) n++;
+  return n;
+};
+
+let selectedGuest = null;
+let searchTerm = '';
+
+let guestById = {};
+function getAllGuests(){
+  const removedSet = new Set(state.removed || []);
+  const base = GUESTS.filter(g => !removedSet.has(g.id));
+  return base.concat(state.extra || []);
+}
+function rebuildGuestMap(){
+  guestById = Object.fromEntries(getAllGuests().map(g=>[g.id,g]));
+}
+
+function guestLabel(g){
+  return g.nombre + ' ' + g.apellido;
+}
+
+function mesaTotal(mesaId){
+  let total = 0, count = 0;
+  for(const gid in state.assign){
+    if(state.assign[gid] === mesaId && guestById[gid]){
+      total += guestById[gid].count;
+      count++;
+    }
+  }
+  return {total, count};
+}
+
+function render(){
+  rebuildGuestMap();
+  renderStats();
+  renderPool();
+  renderMesas();
+  saveState();
+}
+
+function renderStats(){
+  const allGuests = getAllGuests();
+  const totalGuests = allGuests.length;
+  const totalPersonas = allGuests.reduce((s,g)=>s+g.count,0);
+  const assignedIds = Object.keys(state.assign).filter(gid => guestById[gid]);
+  const assignedPersonas = assignedIds.reduce((s,gid)=>s+guestById[gid].count,0);
+  const pendingPersonas = totalPersonas - assignedPersonas;
+  const totalCap = state.mesas.reduce((s,m)=>s+Number(m.cap),0);
+  const over = totalCap < totalPersonas;
+  const removedCount = (state.removed || []).length;
+
+  const stats = document.getElementById('stats');
+  stats.innerHTML = `
+    <div class="stat"><div class="n">${totalPersonas}</div><div class="l">Personas confirmadas</div></div>
+    <div class="stat"><div class="n">${assignedPersonas}</div><div class="l">Ya sentadas</div></div>
+    <div class="stat ${pendingPersonas>0?'warn':''}"><div class="n">${pendingPersonas}</div><div class="l">Sin ubicar</div></div>
+    <div class="stat"><div class="n">${state.mesas.length}</div><div class="l">Mesas creadas</div></div>
+    <div class="stat ${over?'warn':''}"><div class="n">${totalCap}</div><div class="l">Capacidad total</div></div>
+  `;
+
+  const removedLine = document.getElementById('removedLine');
+  if(removedLine){
+    if(removedCount > 0){
+      removedLine.style.display = '';
+      removedLine.querySelector('span').textContent = `${removedCount} invitado${removedCount===1?'':'s'} marcado${removedCount===1?'':'s'} como que no asiste${removedCount===1?'':'n'}.`;
+    } else {
+      removedLine.style.display = 'none';
+    }
+  }
+}
+
+function renderPool(){
+  const list = document.getElementById('poolList');
+  const allGuests = getAllGuests();
+  const unassigned = allGuests.filter(g => !(g.id in state.assign));
+  const term = searchTerm.trim().toLowerCase();
+  const filtered = term
+    ? unassigned.filter(g => (g.apellido+' '+g.nombre).toLowerCase().includes(term))
+    : unassigned;
+
+  document.getElementById('poolCount').textContent = `(${unassigned.length})`;
+
+  if(filtered.length === 0){
+    list.innerHTML = `<div class="pool-empty">${unassigned.length===0 ? 'Todos los invitados están ubicados.' : 'Sin resultados.'}</div>`;
+    return;
+  }
+
+  filtered.sort((a,b)=> (a.apellido+a.nombre).localeCompare(b.apellido+b.nombre, 'es'));
+
+  list.innerHTML = filtered.map(g => `
+    <div class="guest ${selectedGuest===g.id?'selected':''}" draggable="true" data-id="${g.id}">
+      <span class="name"><b>${g.apellido}</b>, ${g.nombre}</span>
+      <span class="badge ${g.count===2?'two':''}">${g.count===2 ? '+1 ('+g.plus+')' : '1'}</span>
+      <button class="del-guest" data-id="${g.id}" title="Eliminar invitado (no asiste)">&#128465;</button>
+    </div>
+  `).join('');
+
+  list.querySelectorAll('.guest').forEach(el=>{
+    el.addEventListener('dragstart', onGuestDragStart);
+    el.addEventListener('click', onGuestClick);
+  });
+  list.querySelectorAll('.del-guest').forEach(btn=>{
+    btn.addEventListener('click', (e)=>{
+      e.stopPropagation();
+      deleteGuest(btn.dataset.id);
+    });
+  });
+}
+
+function deleteGuest(gid){
+  const g = guestById[gid];
+  if(!g) return;
+  if(!confirm(`¿Eliminar a ${g.nombre} ${g.apellido} de la lista? (marca que no asiste)`)) return;
+  const isExtra = (state.extra || []).some(x=>x.id===gid);
+  if(isExtra){
+    state.extra = state.extra.filter(x=>x.id!==gid);
+  } else {
+    state.removed = state.removed || [];
+    if(!state.removed.includes(gid)) state.removed.push(gid);
+  }
+  delete state.assign[gid];
+  if(selectedGuest === gid) selectedGuest = null;
+  render();
+}
+
+function addManualGuest(apellido, nombre, plus){
+  apellido = (apellido||'').trim();
+  nombre = (nombre||'').trim();
+  if(!apellido && !nombre) return false;
+  const extra = plus === 'Sra.' || plus === 'AC';
+  const g = {
+    id: 'x' + Date.now() + Math.floor(Math.random()*1000),
+    apellido, nombre,
+    plus: plus || '',
+    extra,
+    count: extra ? 2 : 1
+  };
+  state.extra = state.extra || [];
+  state.extra.push(g);
+  render();
+  return true;
+}
+
+function renderMesas(){
+  const grid = document.getElementById('mesasGrid');
+  const capOptions = [8,9,10,11,12].map(n=>`<option value="${n}">${n}</option>`).join('');
+
+  let html = state.mesas.map(m=>{
+    const {total} = mesaTotal(m.id);
+    const over = total > m.cap;
+    const guestsInMesa = Object.keys(state.assign)
+      .filter(gid=>state.assign[gid]===m.id && guestById[gid])
+      .map(gid=>guestById[gid])
+      .sort((a,b)=>(a.apellido+a.nombre).localeCompare(b.apellido+b.nombre,'es'));
+
+    const guestsHtml = guestsInMesa.length ? guestsInMesa.map(g=>`
+      <div class="mesa-guest" draggable="true" data-id="${g.id}">
+        <span class="name">${g.apellido}, ${g.nombre} ${g.count===2?'<span style=\"color:var(--sage-dk);font-weight:600;\">+1</span>':''}</span>
+        <button class="remove" data-id="${g.id}" title="Quitar de la mesa">&times;</button>
+      </div>
+    `).join('') : `<div class="mesa-empty">Arrastra invitados aquí</div>`;
+
+    return `
+    <div class="mesa ${over?'over':''}" data-mesa="${m.id}">
+      <div class="mesa-head">
+        <input class="mesa-name" data-id="${m.id}" value="${m.name.replace(/"/g,'&quot;')}">
+        <div class="mesa-cap">
+          <select data-id="${m.id}" class="cap-select">${capOptions}</select>
+        </div>
+        <button class="mesa-del" data-id="${m.id}" title="Eliminar mesa">&times;</button>
+      </div>
+      <div class="mesa-count ${over?'over':''}">${total} / ${m.cap} personas</div>
+      <div class="mesa-dropzone" data-mesa="${m.id}">${guestsHtml}</div>
+    </div>`;
+  }).join('');
+
+  html += `<div class="add-mesa-card" id="addMesaCard">+ Agregar mesa</div>`;
+
+  grid.innerHTML = html;
+
+  // set select values
+  grid.querySelectorAll('.cap-select').forEach(sel=>{
+    const mesa = state.mesas.find(m=>m.id===sel.dataset.id);
+    sel.value = mesa.cap;
+    sel.addEventListener('change', e=>{
+      mesa.cap = Number(e.target.value);
+      render();
+    });
+  });
+
+  grid.querySelectorAll('.mesa-name').forEach(inp=>{
+    inp.addEventListener('change', e=>{
+      const mesa = state.mesas.find(m=>m.id===inp.dataset.id);
+      mesa.name = e.target.value.trim() || mesa.name;
+      saveState();
+    });
+  });
+
+  grid.querySelectorAll('.mesa-del').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const {count} = mesaTotal(btn.dataset.id);
+      if(count > 0 && !confirm('Esta mesa tiene invitados asignados. ¿Eliminar de todas formas? Los invitados volverán a la lista sin asignar.')) return;
+      for(const gid in state.assign){
+        if(state.assign[gid]===btn.dataset.id) delete state.assign[gid];
+      }
+      state.mesas = state.mesas.filter(m=>m.id!==btn.dataset.id);
+      render();
+    });
+  });
+
+  grid.querySelectorAll('.mesa-guest').forEach(el=>{
+    el.addEventListener('dragstart', onGuestDragStart);
+    el.addEventListener('click', ()=>{
+      delete state.assign[el.dataset.id];
+      render();
+    });
+  });
+
+  grid.querySelectorAll('.remove').forEach(btn=>{
+    btn.addEventListener('click', (e)=>{
+      e.stopPropagation();
+      delete state.assign[btn.dataset.id];
+      render();
+    });
+  });
+
+  grid.querySelectorAll('.mesa-dropzone').forEach(zone=>{
+    zone.addEventListener('dragover', e=>{ e.preventDefault(); zone.classList.add('dragover'); });
+    zone.addEventListener('dragleave', ()=> zone.classList.remove('dragover'));
+    zone.addEventListener('drop', e=>{
+      e.preventDefault();
+      zone.classList.remove('dragover');
+      const gid = e.dataTransfer.getData('text/plain');
+      if(gid) assignGuest(gid, zone.dataset.mesa);
+    });
+    zone.addEventListener('click', ()=>{
+      if(selectedGuest){
+        assignGuest(selectedGuest, zone.dataset.mesa);
+        selectedGuest = null;
+      }
+    });
+  });
+
+  document.getElementById('addMesaCard').addEventListener('click', addMesa);
+}
+
+function onGuestDragStart(e){
+  e.dataTransfer.setData('text/plain', e.currentTarget.dataset.id);
+  e.dataTransfer.effectAllowed = 'move';
+}
+
+function onGuestClick(e){
+  const id = e.currentTarget.dataset.id;
+  selectedGuest = (selectedGuest === id) ? null : id;
+  renderPool();
+}
+
+function assignGuest(gid, mesaId){
+  state.assign[gid] = mesaId;
+  render();
+}
+
+function addMesa(){
+  const id = 'm' + Date.now();
+  state.mesas.push({id, name: 'Mesa ' + nextMesaNum(), cap: 10});
+  render();
+}
+
+document.getElementById('poolList').addEventListener('dragover', e=>{
+  e.preventDefault();
+  document.getElementById('poolList').classList.add('dragover');
+});
+document.getElementById('poolList').addEventListener('dragleave', ()=>{
+  document.getElementById('poolList').classList.remove('dragover');
+});
+document.getElementById('poolList').addEventListener('drop', e=>{
+  e.preventDefault();
+  document.getElementById('poolList').classList.remove('dragover');
+  const gid = e.dataTransfer.getData('text/plain');
+  if(gid){
+    delete state.assign[gid];
+    render();
+  }
+});
+
+document.getElementById('search').addEventListener('input', e=>{
+  searchTerm = e.target.value;
+  renderPool();
+});
+
+document.getElementById('btnToggleAdd').addEventListener('click', ()=>{
+  const form = document.getElementById('addGuestForm');
+  const open = form.style.display !== 'none';
+  form.style.display = open ? 'none' : 'block';
+  if(!open) document.getElementById('newApellido').focus();
+});
+document.getElementById('btnCancelAdd').addEventListener('click', ()=>{
+  document.getElementById('addGuestForm').style.display = 'none';
+  document.getElementById('newApellido').value = '';
+  document.getElementById('newNombre').value = '';
+  document.getElementById('newPlus').value = '';
+});
+document.getElementById('btnConfirmAdd').addEventListener('click', ()=>{
+  const apellido = document.getElementById('newApellido').value;
+  const nombre = document.getElementById('newNombre').value;
+  const plus = document.getElementById('newPlus').value;
+  const ok = addManualGuest(apellido, nombre, plus);
+  if(ok){
+    document.getElementById('newApellido').value = '';
+    document.getElementById('newNombre').value = '';
+    document.getElementById('newPlus').value = '';
+    document.getElementById('newApellido').focus();
+  } else {
+    alert('Escribí al menos el apellido o el nombre.');
+  }
+});
+document.getElementById('restoreRemoved').addEventListener('click', (e)=>{
+  e.preventDefault();
+  if(confirm('¿Restaurar a todos los invitados marcados como que no asisten?')){
+    state.removed = [];
+    render();
+  }
+});
+
+document.getElementById('btnAddMesa').addEventListener('click', addMesa);
+
+document.getElementById('btnReset').addEventListener('click', ()=>{
+  if(confirm('¿Vaciar todas las asignaciones de mesas? Esto no borra las mesas, solo las asignaciones.')){
+    state.assign = {};
+    render();
+  }
+});
+
+document.getElementById('btnExport').addEventListener('click', ()=>{
+  let rows = [['Mesa','Apellido','Nombre','Acompañante','Personas']];
+  state.mesas.forEach(m=>{
+    const guests = Object.keys(state.assign)
+      .filter(gid=>state.assign[gid]===m.id && guestById[gid])
+      .map(gid=>guestById[gid])
+      .sort((a,b)=>(a.apellido+a.nombre).localeCompare(b.apellido+b.nombre,'es'));
+    guests.forEach(g=>{
+      rows.push([m.name, g.apellido, g.nombre, g.count===2?g.plus:'', g.count]);
+    });
+  });
+  const unassigned = getAllGuests().filter(g=>!(g.id in state.assign));
+  unassigned.forEach(g=>{
+    rows.push(['Sin asignar', g.apellido, g.nombre, g.count===2?g.plus:'', g.count]);
+  });
+  const csv = rows.map(r=>r.map(v=>{
+    v = String(v);
+    if(v.includes(',')||v.includes('"')||v.includes('\n')){
+      v = '"' + v.replace(/"/g,'""') + '"';
+    }
+    return v;
+  }).join(',')).join('\n');
+
+  const blob = new Blob(['\uFEFF'+csv], {type:'text/csv;charset=utf-8;'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'mesas_diego_y_angie.csv';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+});
+
+document.getElementById('btnExportXlsx').addEventListener('click', ()=>{
+  const detailRows = [];
+  const summaryRows = [];
+
+  state.mesas.forEach((m, idx) => {
+    const guests = Object.keys(state.assign)
+      .filter(gid=>state.assign[gid]===m.id && guestById[gid])
+      .map(gid=>guestById[gid])
+      .sort((a,b)=>(a.apellido+a.nombre).localeCompare(b.apellido+b.nombre,'es'));
+
+    const personas = guests.reduce((s,g)=>s+g.count,0);
+
+    guests.forEach(g=>{
+      detailRows.push({
+        'N° Mesa': idx+1,
+        'Mesa': m.name,
+        'Apellido': g.apellido,
+        'Nombre': g.nombre,
+        'Acompañante': g.count===2 ? g.plus : '',
+        'Personas': g.count
+      });
+    });
+
+    summaryRows.push({
+      'N° Mesa': idx+1,
+      'Mesa': m.name,
+      'Capacidad': m.cap,
+      'Personas asignadas': personas,
+      'Cupos libres': m.cap - personas
+    });
+  });
+
+  const unassigned = getAllGuests().filter(g=>!(g.id in state.assign))
+    .sort((a,b)=>(a.apellido+a.nombre).localeCompare(b.apellido+b.nombre,'es'));
+  unassigned.forEach(g=>{
+    detailRows.push({
+      'N° Mesa': '',
+      'Mesa': 'Sin asignar',
+      'Apellido': g.apellido,
+      'Nombre': g.nombre,
+      'Acompañante': g.count===2 ? g.plus : '',
+      'Personas': g.count
+    });
+  });
+
+  const wb = XLSX.utils.book_new();
+  const wsDetail = XLSX.utils.json_to_sheet(detailRows);
+  wsDetail['!cols'] = [{wch:8},{wch:14},{wch:18},{wch:18},{wch:12},{wch:9}];
+  XLSX.utils.book_append_sheet(wb, wsDetail, 'Por invitado');
+
+  const wsSummary = XLSX.utils.json_to_sheet(summaryRows);
+  wsSummary['!cols'] = [{wch:8},{wch:14},{wch:11},{wch:18},{wch:12}];
+  XLSX.utils.book_append_sheet(wb, wsSummary, 'Resumen por mesa');
+
+  XLSX.writeFile(wb, 'mesas_diego_y_angie.xlsx');
+});
+
+render();
+initCloudSync();
+</script>
+</body>
+</html>
