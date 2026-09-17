@@ -434,6 +434,9 @@
       <div class="sub" id="syncStatus" style="margin-top:2px;">Conectando almacenamiento...</div>
     </div>
     <div class="toolbar">
+      <button class="ghost" id="btnImportBackup">Importar backup</button>
+      <input type="file" id="fileImportBackup" accept="application/json" style="display:none;">
+      <button class="ghost" id="btnExportBackup">Exportar backup</button>
       <button class="ghost" id="btnExportXlsx">Exportar Excel</button>
       <button class="ghost" id="btnExport">Exportar CSV</button>
       <button class="ghost" id="btnReset">Vaciar todo</button>
@@ -913,6 +916,55 @@ document.getElementById('restoreRemoved').addEventListener('click', (e)=>{
 });
 
 document.getElementById('btnAddMesa').addEventListener('click', addMesa);
+
+document.getElementById('btnExportBackup').addEventListener('click', ()=>{
+  const backup = {
+    mesas: state.mesas,
+    assign: state.assign,
+    extra: state.extra || [],
+    removed: state.removed || []
+  };
+  const blob = new Blob([JSON.stringify(backup, null, 2)], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'mesas_backup.json';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+});
+
+document.getElementById('btnImportBackup').addEventListener('click', ()=>{
+  document.getElementById('fileImportBackup').click();
+});
+document.getElementById('fileImportBackup').addEventListener('change', (e)=>{
+  const file = e.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = (ev)=>{
+    try{
+      const data = JSON.parse(ev.target.result);
+      if(!data || !Array.isArray(data.mesas)){
+        alert('El archivo no tiene el formato esperado (falta "mesas").');
+        return;
+      }
+      if(!confirm('Esto va a reemplazar las mesas y asignaciones actuales por las del archivo. ¿Continuar?')) return;
+      state = {
+        mesas: data.mesas,
+        assign: data.assign || {},
+        extra: data.extra || [],
+        removed: data.removed || []
+      };
+      render();
+      alert('Backup importado correctamente.');
+    }catch(err){
+      alert('No se pudo leer el archivo: ' + err.message);
+    }
+    e.target.value = '';
+  };
+  reader.readAsText(file);
+});
 
 document.getElementById('btnReset').addEventListener('click', ()=>{
   if(confirm('¿Vaciar todas las asignaciones de mesas? Esto no borra las mesas, solo las asignaciones.')){
